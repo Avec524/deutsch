@@ -1,0 +1,119 @@
+{
+    "name": "SprechenBot (Mistrai AI)",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "sprechenbot",
+          "options": {}
+        },
+        "id": "Webhook",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [300, 300]
+      },
+      {
+        "parameters": {
+          "functionCode": "const userMessage = $json[\"message\"];\nconst history     = $json[\"history\"] || \"\";\n\nconst systemPrompt = `Du bist ein freundlicher und geduldiger Deutschlehrer. Antworte immer auf Deutsch und hilf beim Lernen.`;\n\nreturn [{\n  json: {\n    prompt: `${systemPrompt}\\n\\n${history}\\nBenutzer: ${userMessage}\\nBot:`\n  }\n}];"
+        },
+        "id": "GeneratePrompt",
+        "name": "Generate Prompt",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [500, 300]
+      },
+      {
+        "parameters": {
+          "requestMethod": "POST",
+          "url": "https://api.mistral.ai/v1/chat/completions",
+          "authentication": "headerAuth",
+          "headerParameters": {
+            "Authorization": "Bearer YOUR_MISTRAI_API_KEY",
+            "Content-Type": "application/json"
+          },
+          "bodyParameters": {
+            "model": "mistral-small",
+            "messages": "[{\"role\":\"user\",\"content\":\"={{$json[\"prompt\"]}}\"}]"
+          }
+        },
+        "id": "CallMistrai",
+        "name": "Call Mistrai AI",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 2,
+        "position": [700, 300],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "Mistrai_Credential_ID",
+            "name": "Mistrai-API-Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "functionCode": "return [{ json: { botResponse: $json.choices[0].message.content } }];"
+        },
+        "id": "ExtractBotReply",
+        "name": "Extract Bot Reply",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [900, 300]
+      },
+      {
+        "parameters": {
+          "responseMode": "lastNode"
+        },
+        "id": "Respond",
+        "name": "Respond to Webhook",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [1100, 300]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "GeneratePrompt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GeneratePrompt": {
+        "main": [
+          [
+            {
+              "node": "CallMistrai",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "CallMistrai": {
+        "main": [
+          [
+            {
+              "node": "ExtractBotReply",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "ExtractBotReply": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  }
+  
