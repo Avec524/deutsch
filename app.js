@@ -3,7 +3,7 @@ const userInput = document.getElementById('user-input');
 const chatBox = document.getElementById('chat-box');
 
 // Вставьте сюда ваш n8n Webhook URL
-const webhookUrl = 'https://ВАШ_N8N_ДОМЕН/sprechenbot';
+const webhookUrl = 'https://proggramwertyumer.app.n8n.cloud/workflow/pWFteG7VgJKLHvP3';
 
 chatForm.addEventListener('submit', async (e) => {
   e.preventDefault();
