@@ -1,26 +1,21 @@
 document.getElementById('send-button').addEventListener('click', sendMessage);
 
 function sendMessage() {
-  const userMessage = document.getElementById('user-input').value;
+  const userMessage = document.getElementById('user-input').value.trim();
   if (!userMessage) return;
 
-  // Добавляем сообщение пользователя в чат
   const chatBox = document.getElementById('chat-box');
-  const userMessageDiv = document.createElement('div');
-  userMessageDiv.textContent = `Вы: ${userMessage}`;
-  chatBox.appendChild(userMessageDiv);
+  const userDiv = document.createElement('div');
+  userDiv.textContent = `Вы: ${userMessage}`;
+  chatBox.appendChild(userDiv);
 
-  // Очищаем поле ввода
   document.getElementById('user-input').value = '';
 
-  // Здесь будет добавлена логика для обработки сообщения через AI
-  // Для примера просто имитируем ответ ассистента
-  const botMessageDiv = document.createElement('div');
-  botMessageDiv.textContent = `Ассистент: Привет! Давай продолжим изучать немецкий.`;
-  chatBox.appendChild(botMessageDiv);
-
-  // Прокручиваем чат до последнего сообщения
-  chatBox.scrollTop = chatBox.scrollHeight;
+  // Симуляция ответа ассистента
+  setTimeout(() => {
+    const botDiv = document.createElement('div');
+    botDiv.textContent = 'Ассистент: Отлично! Продолжим изучать немецкий!';
+    chatBox.appendChild(botDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }, 500);
 }
-
-
