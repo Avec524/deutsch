@@ -1,48 +1,26 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const chatInput  = document.getElementById("chat-input");
-  const chatButton = document.getElementById("chat-button");
-  const chatBox    = document.getElementById("chatbox");
+document.getElementById('send-button').addEventListener('click', sendMessage);
 
-  // URL вашего n8n Webhook
-  const webhookUrl = 'https://proggramwertyumer.app.n8n.cloud/webhook-test/german-assistant';
+function sendMessage() {
+  const userMessage = document.getElementById('user-input').value;
+  if (!userMessage) return;
 
-  // Отправка сообщения
-  async function sendMessage(message) {
-    addMessage("Вы", message, "user-message");
-    try {
-      const res = await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: "user123", message })
-      });
-      if (!res.ok) throw new Error(res.status);
-      const data = await res.json();
-      addMessage("Ассистент", data.reply, "bot-message");
-    } catch (e) {
-      console.error(e);
-      addMessage("Система", "Ошибка сервера. Попробуйте позже.", "bot-message");
-    }
-    chatInput.value = "";
-  }
+  // Добавляем сообщение пользователя в чат
+  const chatBox = document.getElementById('chat-box');
+  const userMessageDiv = document.createElement('div');
+  userMessageDiv.textContent = `Вы: ${userMessage}`;
+  chatBox.appendChild(userMessageDiv);
 
-  // Добавление сообщения в чат
-  function addMessage(sender, text, cssClass) {
-    const p = document.createElement("p");
-    p.className = cssClass;
-    p.innerHTML = `<strong>${sender}:</strong> ${text}`;
-    chatBox.appendChild(p);
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
+  // Очищаем поле ввода
+  document.getElementById('user-input').value = '';
 
-  // Обработчики событий
-  chatButton.addEventListener("click", () => {
-    const msg = chatInput.value.trim();
-    if (msg) sendMessage(msg);
-  });
-  chatInput.addEventListener("keypress", e => {
-    if (e.key === "Enter" && chatInput.value.trim()) {
-      sendMessage(chatInput.value.trim());
-    }
-  });
-});
+  // Здесь будет добавлена логика для обработки сообщения через AI
+  // Для примера просто имитируем ответ ассистента
+  const botMessageDiv = document.createElement('div');
+  botMessageDiv.textContent = `Ассистент: Привет! Давай продолжим изучать немецкий.`;
+  chatBox.appendChild(botMessageDiv);
+
+  // Прокручиваем чат до последнего сообщения
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
 
