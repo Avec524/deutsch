@@ -1,53 +1,38 @@
-const chatForm = document.getElementById('chat-form');
-const userInput = document.getElementById('user-input');
-const chatBox = document.getElementById('chat-box');
+const webhookUrl = 'https://your-n8n-domain.com/webhook/german-assistant'; // поменяй на свой настоящий URL!
 
-// Вставьте сюда ваш n8n Webhook URL
-const webhookUrl = 'https://proggramwertyumer.app.n8n.cloud/webhook-test/sprechenbot';
+function sendMessage() {
+  const userInput = document.getElementById('userInput').value;
+  if (!userInput.trim()) return;
 
-chatForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const message = userInput.value.trim();
-  if (!message) return;
+  addMessage('Вы', userInput);
 
-  appendMessage('user', message);
-  userInput.value = '';
+  fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      body: {
+        message: userInput,
+        user_id: "user-1"  // Пока фиксированный ID пользователя, можно улучшить
+      }
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    const botReply = data.reply || "Извините, произошла ошибка.";
+    addMessage('Ассистент', botReply);
+  })
+  .catch(error => {
+    console.error('Ошибка:', error);
+    addMessage('Ошибка', 'Не удалось получить ответ от сервера.');
+  });
 
-  // Показываем индикатор «бот печатает…»
-  const typingIndicator = appendMessage('bot', 'SprechenBot denkt…', true);
-
-  try {
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, history: getHistory() })
-    });
-    const data = await response.json();
-
-    // Убираем индикатор
-    chatBox.removeChild(typingIndicator);
-
-    appendMessage('bot', data.botResponse || 'Entschuldigung, ein Fehler ist aufgetreten.');
-  } catch (error) {
-    chatBox.removeChild(typingIndicator);
-    appendMessage('bot', 'Fehler beim Verbinden mit dem Bot.');
-    console.error(error);
-  }
-});
-
-function appendMessage(sender, text, isIndicator = false) {
-  const messageDiv = document.createElement('div');
-  messageDiv.classList.add('chat-message', sender);
-  messageDiv.textContent = text;
-  if (isIndicator) messageDiv.classList.add('typing');
-  chatBox.appendChild(messageDiv);
-  chatBox.scrollTop = chatBox.scrollHeight;
-  return messageDiv;
+  document.getElementById('userInput').value = '';
 }
 
-function getHistory() {
-  return Array.from(chatBox.children)
-    .map(div => `${div.classList.contains('user') ? 'User' : 'Bot'}: ${div.textContent}`)
-    .join('\n');
+function addMessage(sender, text) {
+  const chatbox = document.getElementById('chatbox');
+  const message = document.createElement('p');
+  message.innerHTML = `<strong>${sender}:</strong> ${text}`;
+  chatbox.appendChild(message);
+  chatbox.scrollTop = chatbox.scrollHeight;
 }
-
