@@ -1,38 +1,48 @@
-const webhookUrl = 'https://your-n8n-domain.com/webhook/german-assistant'; // поменяй на свой настоящий URL!
+document.addEventListener("DOMContentLoaded", () => {
+  const chatInput = document.getElementById("chat-input");
+  const chatButton = document.getElementById("chat-button");
+  const chatBox   = document.getElementById("chatbox");
 
-function sendMessage() {
-  const userInput = document.getElementById('userInput').value;
-  if (!userInput.trim()) return;
+  // Ваш n8n Webhook URL
+  const webhookUrl = 'https://proggramwertyumer.app.n8n.cloud/webhook-test/german-assistant';
 
-  addMessage('Вы', userInput);
+  // Функция отправки сообщения
+  async function sendMessage(message) {
+    // Показываем сообщение пользователя
+    addMessage("Вы", message, "user-message");
+    try {
+      const res = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: "user123", message })
+      });
+      if (!res.ok) throw new Error(res.status);
+      const data = await res.json();
+      addMessage("Ассистент", data.reply, "bot-message");
+    } catch (e) {
+      console.error(e);
+      addMessage("Система", "Ошибка сервера. Попробуйте позже.", "bot-message");
+    }
+    chatInput.value = "";
+  }
 
-  fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      body: {
-        message: userInput,
-        user_id: "user-1"  // Пока фиксированный ID пользователя, можно улучшить
-      }
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    const botReply = data.reply || "Извините, произошла ошибка.";
-    addMessage('Ассистент', botReply);
-  })
-  .catch(error => {
-    console.error('Ошибка:', error);
-    addMessage('Ошибка', 'Не удалось получить ответ от сервера.');
+  // Добавление сообщения в чат
+  function addMessage(sender, text, cssClass) {
+    const p = document.createElement("p");
+    p.className = cssClass;
+    p.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    chatBox.appendChild(p);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  // Обработчики
+  chatButton.addEventListener("click", () => {
+    const msg = chatInput.value.trim();
+    if (msg) sendMessage(msg);
   });
-
-  document.getElementById('userInput').value = '';
-}
-
-function addMessage(sender, text) {
-  const chatbox = document.getElementById('chatbox');
-  const message = document.createElement('p');
-  message.innerHTML = `<strong>${sender}:</strong> ${text}`;
-  chatbox.appendChild(message);
-  chatbox.scrollTop = chatbox.scrollHeight;
-}
+  chatInput.addEventListener("keypress", e => {
+    if (e.key === "Enter" && chatInput.value.trim()) {
+      sendMessage(chatInput.value.trim());
+    }
+  });
+});
