@@ -1,113 +1,243 @@
 {
-    "name": "SprechenBot (Mistrai AI)",
+    "name": "AI-Chat German Assistant with Memory",
     "nodes": [
       {
-        "parameters": {
-          "path": "sprechenbot",
-          "options": {}
-        },
-        "id": "Webhook",
-        "name": "Webhook",
+        "id": "Webhook_Listen",
+        "name": "Webhook - Receive Message",
         "type": "n8n-nodes-base.webhook",
         "typeVersion": 1,
-        "position": [300, 300]
-      },
-      {
+        "position": [250, 200],
         "parameters": {
-          "functionCode": "const userMessage = $json[\"message\"];\nconst history     = $json[\"history\"] || \"\";\n\nconst systemPrompt = `Du bist ein freundlicher und geduldiger Deutschlehrer. Antworte immer auf Deutsch und hilf beim Lernen.`;\n\nreturn [{\n  json: {\n    prompt: `${systemPrompt}\\n\\n${history}\\nBenutzer: ${userMessage}\\nBot:`\n  }\n}];"
-        },
-        "id": "GeneratePrompt",
-        "name": "Generate Prompt",
-        "type": "n8n-nodes-base.function",
-        "typeVersion": 1,
-        "position": [500, 300]
-      },
-      {
-        "parameters": {
-          "requestMethod": "POST",
-          "url": "https://api.mistral.ai/v1/chat/completions",
-          "authentication": "headerAuth",
-          "headerParameters": {
-            "Authorization": "Bearer YOUR_MISTRAI_API_KEY",
-            "Content-Type": "application/json"
-          },
-          "bodyParameters": {
-            "model": "mistral-small",
-            "messages": "[{\"role\":\"user\",\"content\":\"={{$json[\"prompt\"]}}\"}]"
-          }
-        },
-        "id": "CallMistrai",
-        "name": "Call Mistrai AI",
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 2,
-        "position": [700, 300],
-        "credentials": {
-          "httpHeaderAuth": {
-            "id": "Mistrai_Credential_ID",
-            "name": "Mistrai-API-Key"
+          "path": "german-assistant",
+          "method": "POST",
+          "responseMode": "onReceived",
+          "responseData": {
+            "responseBody": "={{ $json.reply }}"
           }
         }
       },
       {
-        "parameters": {
-          "functionCode": "return [{ json: { botResponse: $json.choices[0].message.content } }];"
-        },
-        "id": "ExtractBotReply",
-        "name": "Extract Bot Reply",
-        "type": "n8n-nodes-base.function",
+        "id": "Get_History",
+        "name": "Google Sheets - Get History",
+        "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 1,
-        "position": [900, 300]
+        "position": [450, 200],
+        "parameters": {
+          "operation": "lookup",
+          "sheetId": "YOUR_SHEET_ID",
+          "range": "Sheet1!A:B",
+          "lookupColumn": "A",
+          "lookupValue": "={{ $json.body.user_id }}"
+        },
+        "credentials": {
+          "googleApi": {
+            "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID"
+          }
+        }
       },
       {
-        "parameters": {
-          "responseMode": "lastNode"
-        },
-        "id": "Respond",
-        "name": "Respond to Webhook",
-        "type": "n8n-nodes-base.respondToWebhook",
+        "id": "Set_History",
+        "name": "Set History",
+        "type": "n8n-nodes-base.set",
         "typeVersion": 1,
-        "position": [1100, 300]
+        "position": [650, 200],
+        "parameters": {
+          "keepOnlySet": true,
+          "values": {
+            "string": [
+              {
+                "name": "history",
+                "value": "={{ $items('Get_History')[0] ? $items('Get_History')[0].json.history : '' }}"
+              },
+              {
+                "name": "new_message",
+                "value": "={{ 'User: ' + $json.body.message }}"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "Append_User",
+        "name": "Append User to History",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [850, 200],
+        "parameters": {
+          "functionCode": "return [{ json: { combined: (items[0].json.history ? items[0].json.history + '\\n' : '') + items[0].json.new_message } }];"
+        }
+      },
+      {
+        "id": "HTTP_Request_Mistral",
+        "name": "Mistral AI Request",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 2,
+        "position": [1050, 200],
+        "parameters": {
+          "url": "https://api.mistral.ai/v1/chat/completions",
+          "method": "POST",
+          "authentication": "none",
+          "options": {},
+          "headerParameters": {
+            "Authorization": "Bearer YOUR_MISTRAL_API_KEY",
+            "Content-Type": "application/json"
+          },
+          "bodyParametersJson": "={\n  \"model\": \"mistral-small\",\n  \"messages\": [\n    { \"role\": \"system\", \"content\": \"Ты дружелюбный ассистент по изучению немецкого языка. Ты понимаешь русский язык и можешь объяснять на русском при необходимости. Главное — говори на немецком простыми фразами. Если ученик делает ошибку или пишет по-русски — нежно исправляй и поддерживай.\" },\n    { \"role\": \"user\", \"content\": \"{{ $json.combined }}\" }\n  ]\n}",
+          "responseFormat": "json"
+        }
+      },
+      {
+        "id": "Set_Bot_Response",
+        "name": "Set Bot Response",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 1,
+        "position": [1250, 200],
+        "parameters": {
+          "keepOnlySet": true,
+          "values": {
+            "string": [
+              {
+                "name": "bot_reply",
+                "value": "={{ $json.choices[0].message.content }}"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "Append_Bot",
+        "name": "Append Bot to History",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [1450, 200],
+        "parameters": {
+          "functionCode": "return [{ json: { updatedHistory: $items('Append_User')[0].json.combined + '\\nBot: ' + $json.bot_reply } }];"
+        }
+      },
+      {
+        "id": "Update_History",
+        "name": "Google Sheets - Update History",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 1,
+        "position": [1650, 200],
+        "parameters": {
+          "operation": "update",
+          "sheetId": "YOUR_SHEET_ID",
+          "range": "Sheet1!A:B",
+          "lookupColumn": "A",
+          "lookupValue": "={{ $json.body.user_id }}",
+          "fields": {
+            "history": "={{ $json.updatedHistory }}"
+          }
+        },
+        "credentials": {
+          "googleApi": {
+            "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID"
+          }
+        }
+      },
+      {
+        "id": "Set_Reply",
+        "name": "Set Reply",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 1,
+        "position": [1850, 200],
+        "parameters": {
+          "keepOnlySet": true,
+          "values": {
+            "string": [
+              {
+                "name": "reply",
+                "value": "={{ $json.bot_reply }}"
+              }
+            ]
+          }
+        }
       }
     ],
     "connections": {
-      "Webhook": {
+      "Webhook_Listen": {
         "main": [
           [
             {
-              "node": "GeneratePrompt",
+              "node": "Get_History",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "GeneratePrompt": {
+      "Get_History": {
         "main": [
           [
             {
-              "node": "CallMistrai",
+              "node": "Set_History",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "CallMistrai": {
+      "Set_History": {
         "main": [
           [
             {
-              "node": "ExtractBotReply",
+              "node": "Append_User",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "ExtractBotReply": {
+      "Append_User": {
         "main": [
           [
             {
-              "node": "Respond",
+              "node": "HTTP_Request_Mistral",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP_Request_Mistral": {
+        "main": [
+          [
+            {
+              "node": "Set_Bot_Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set_Bot_Response": {
+        "main": [
+          [
+            {
+              "node": "Append_Bot",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append_Bot": {
+        "main": [
+          [
+            {
+              "node": "Update_History",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update_History": {
+        "main": [
+          [
+            {
+              "node": "Set_Reply",
               "type": "main",
               "index": 0
             }
@@ -116,4 +246,5 @@
       }
     }
   }
+  
   
