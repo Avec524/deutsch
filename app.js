@@ -1,14 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const chatInput = document.getElementById("chat-input");
+  const chatInput  = document.getElementById("chat-input");
   const chatButton = document.getElementById("chat-button");
-  const chatBox   = document.getElementById("chatbox");
+  const chatBox    = document.getElementById("chatbox");
 
-  // Ваш n8n Webhook URL
+  // URL вашего n8n Webhook
   const webhookUrl = 'https://proggramwertyumer.app.n8n.cloud/webhook-test/german-assistant';
 
-  // Функция отправки сообщения
+  // Отправка сообщения
   async function sendMessage(message) {
-    // Показываем сообщение пользователя
     addMessage("Вы", message, "user-message");
     try {
       const res = await fetch(webhookUrl, {
@@ -35,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
-  // Обработчики
+  // Обработчики событий
   chatButton.addEventListener("click", () => {
     const msg = chatInput.value.trim();
     if (msg) sendMessage(msg);
@@ -46,3 +45,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
