@@ -1,6 +1,6 @@
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f4f4f4;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(to right, #e0eafc, #cfdef3);
   margin: 0;
   padding: 0;
   display: flex;
@@ -10,42 +10,62 @@ body {
 }
 
 .container {
-  width: 80%;
-  max-width: 800px;
-  background-color: #fff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-  padding: 20px;
+  width: 90%;
+  max-width: 600px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  padding: 30px;
+  text-align: center;
 }
 
 header {
-  text-align: center;
-}
-
-.hero {
-  text-align: center;
   margin-bottom: 20px;
 }
 
-.hero-img {
-  width: 100px;
-  height: 100px;
-  margin: 10px 0;
+.hero-img, .small-hero-img {
+  width: 120px;
+  height: 120px;
+  margin: 15px 0;
 }
 
-.payment-button {
+.small-hero-img {
+  width: 80px;
+  height: 80px;
+}
+
+.welcome {
+  padding: 20px;
+}
+
+.welcome-text h2 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.welcome-text p {
+  font-size: 16px;
+  color: #666;
+}
+
+.start-button, .payment-button {
   display: inline-block;
-  padding: 10px 20px;
-  background-color: #ff6347;
+  margin-top: 20px;
+  padding: 12px 24px;
+  background-color: #4CAF50;
   color: white;
   text-decoration: none;
-  border-radius: 5px;
-  text-align: center;
-  margin-top: 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: background-color 0.3s;
 }
 
-.payment-button:hover {
-  background-color: #e5533d;
+.start-button:hover, .payment-button:hover {
+  background-color: #45a049;
+}
+
+.payment-section {
+  padding: 20px;
 }
 
 .chat {
@@ -54,31 +74,34 @@ header {
 
 #chat-box {
   border: 1px solid #ccc;
+  border-radius: 6px;
   padding: 10px;
   height: 200px;
-  overflow-y: scroll;
+  overflow-y: auto;
   background-color: #f9f9f9;
+  margin-bottom: 10px;
 }
 
 #user-input {
   width: calc(100% - 22px);
   padding: 10px;
+  margin-bottom: 10px;
   border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-top: 10px;
+  border-radius: 6px;
 }
 
 #send-button {
   padding: 10px 20px;
-  background-color: #4CAF50;
+  background-color: #007BFF;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
 #send-button:hover {
-  background-color: #45a049;
+  background-color: #0069d9;
 }
+
 
 
